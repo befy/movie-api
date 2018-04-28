@@ -7,7 +7,19 @@ const Movie = require('../Models/Movie');
 /* GET movies listing. */
 
 router.get('/', (req,res) => {
-  const promise = Movie.find({});
+  const promise = Movie.aggregate([
+    {
+      $lookup: {
+        from: 'directors',
+        localField: 'director_id',
+        foreignField: '_id',
+        as: 'director'
+      }
+    },
+    {
+      $unwind: '$director'
+    }
+  ]);
   promise
   .then((data) => {
     res.json(data);
@@ -95,14 +107,16 @@ router.delete('/:movie_id', (req,res, next) => {
 });
 
 router.post('/', (req, res, next) => {
-  const {title, imdb_score, category, country, year } = req.body;
+  const {title, imdb_score, category, country, year, director_id } = req.body;
+  console.log(req.body,"----");
   //const Movie = new Movie(req.body); şeklinde kullanım mevcut. Tüm fieldları bu şekilde çeker.
   const movie = new Movie({
     title: title,
     imdb_score: imdb_score,
     category: category,
     country: country,
-    year: year
+    year: year,
+    director_id: director_id
   });
   /*movie.save((err, data) => {
     if(err){
